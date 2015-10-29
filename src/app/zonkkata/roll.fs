@@ -25,7 +25,6 @@ module Roll =
         | _ -> None
 
     let (|GroupPoints|_|) roll = 
-
         let sumPoints =
             let calcPoints (x, count) =
                 match count with 
@@ -34,14 +33,16 @@ module Roll =
             
             List.map calcPoints >> List.sum
 
-        let byFreq (x, s) = x, s|> Seq.length
+        let groupAndCount = 
+            let byFreq (x, s) = x, s|> Seq.length
+            Seq.groupBy id
+            >> Seq.map byFreq
+            >> Seq.sortBy snd
+            >> Seq.toList
+            >> List.rev
 
         roll 
-        |> Seq.groupBy id
-        |> Seq.map byFreq
-        |> Seq.sortBy snd
-        |> Seq.toList
-        |> List.rev
+        |> groupAndCount
         |> function
         | ThreePairs -> ThreePairsPoints
         | byCount    -> byCount |> sumPoints
