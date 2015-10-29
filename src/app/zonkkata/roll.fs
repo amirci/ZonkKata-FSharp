@@ -11,17 +11,17 @@ module Roll =
 
     let XOfAKindPoints (dice, repeat) = (repeat - 2) * (dice |> ThreeOfAKindPoints)
 
-    let FourOfAKindPoints repeat = (4, repeat) |> XOfAKindPoints
+    let FourOfAKindPoints n = (n, 4) |> XOfAKindPoints
 
-    let FiveOfAKindPoints repeat = (5, repeat) |> XOfAKindPoints
+    let FiveOfAKindPoints n = (n, 5) |> XOfAKindPoints
 
-    let SixOfAKindPoints repeat = (6, repeat) |> XOfAKindPoints
+    let SixOfAKindPoints n = (n, 6) |> XOfAKindPoints
 
     let (|GroupPoints|_|) roll = 
-        let groupPoints (x, c) =
-            match c with 
-            | _ when c < 3 -> c * (x |> SingleDiePoints)
-            | _            -> (x, c) |> XOfAKindPoints
+        let groupPoints (x, count) =
+            match count with 
+            | _ when count < 3 -> count * (x |> SingleDiePoints)
+            | _                -> (x, count) |> XOfAKindPoints
 
         let byFreq (x, s) = x, s|> Seq.length
 

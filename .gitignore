@@ -10,3 +10,4 @@ build/
 tests/
 .fake/
 *.DotSettings.user
+.vs/
