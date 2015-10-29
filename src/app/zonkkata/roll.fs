@@ -1,54 +1,53 @@
 ﻿namespace ZonkKata
 
 module Roll =
-    let SingleDiePoints d = match d with
-                            | 1 -> 100
-                            | 5 -> 50
-                            | _ -> 0
+    let SingleDicePoints = function | 1 -> 100 | 5 -> 50 | _ -> 0
 
-    let SumOnesAndFives dice = dice |> Seq.map SingleDiePoints |> Seq.sum
+    let SumOnesAndFives = Seq.map SingleDicePoints >> Seq.sum
 
     let ThreePairsPoints = 750
 
-    let ThreeOfAKindPoints n = match n with 
-                               | 1 -> 1000
-                               | _ -> n * 100
+    let ThreeOfAKindPoints = function | 1 -> 1000 | n -> n * 100
 
-    let FourOfAKindPoints n = 2 * (n |> ThreeOfAKindPoints)
-    let FiveOfAKindPoints n = 3 * (n |> ThreeOfAKindPoints)
-    let SixOfAKindPoints n = 4 * (n |> ThreeOfAKindPoints)
+    let XOfAKindPoints (dice, repeat) = (repeat - 2) * (dice |> ThreeOfAKindPoints)
+
+    let FourOfAKindPoints repeat = (4, repeat) |> XOfAKindPoints
+
+    let FiveOfAKindPoints repeat = (5, repeat) |> XOfAKindPoints
+
+    let SixOfAKindPoints repeat = (6, repeat) |> XOfAKindPoints
 
     let (|GroupPoints|_|) roll = 
         let groupPoints (x, c) =
             match c with 
-            | 6 -> x |> SixOfAKindPoints
-            | 5 -> x |> FiveOfAKindPoints
-            | 4 -> x |> FourOfAKindPoints
-            | 3 -> x |> ThreeOfAKindPoints
-            | _ -> c * (x |> SingleDiePoints)
+            | _ when c < 3 -> c * (x |> SingleDicePoints)
+            | _            -> (x, c) |> XOfAKindPoints
 
-        roll |> Seq.groupBy (id)
-             |> Seq.map (fun (x,s) -> (x, s |> Seq.length))
-             |> Seq.sortBy (fun (_,c) -> c)
-             |> Seq.toList
-             |> List.rev
-             |> fun grps -> match grps with 
-                            | [(_,2); (_,2); (_,2)]      -> Some ThreePairsPoints
-                            | [(2,4); (_,2)]             -> Some ThreePairsPoints
-                            | [(3,4); (x,2)] when x <> 1 -> Some ThreePairsPoints
-                            | (_,c) :: t     when c >= 3 -> grps
-                                                            |> List.map groupPoints 
-                                                            |> List.sum
-                                                            |> Some
-                            | _ -> None
+        let byFreq (x, s) = x, s|> Seq.length
 
-    let CalculatePoints roll =
-        let sorted = roll |> List.sort
-        match sorted with 
-        | [1; 2; 3; 4; 5; 6] -> 1000
-        | GroupPoints pts    -> pts
-        | _                  -> sorted |> SumOnesAndFives
+        roll 
+        |> Seq.groupBy id
+        |> Seq.map byFreq
+        |> Seq.sortBy snd
+        |> Seq.toList
+        |> List.rev
+        |> function
+           | [(_,2); (_,2); (_,2)]      -> Some ThreePairsPoints
+           | [(2,4); (_,2)]             -> Some ThreePairsPoints
+           | [(3,4); (x,2)] when x <> 1 -> Some ThreePairsPoints
+           | (g, c) :: t    when c >= 3 -> ((g, c)::t) |> List.map groupPoints |> List.sum |> Some
+           | _ -> None
 
-    let PrintPoints roll = match roll |> CalculatePoints with 
-                           | 0 -> printfn "Zonk!"
-                           | p -> printfn "You rolled %i points." p
+    let CalculatePoints =
+        List.sort
+        >> function
+           | [1; 2; 3; 4; 5; 6] -> 1000
+           | GroupPoints pts    -> pts
+           | sorted             -> sorted |> SumOnesAndFives
+
+    let PrintPoints = 
+      CalculatePoints 
+      >> function
+         | 0 -> printfn "Zonk!"
+         | p -> printfn "You rolled %i points." p
+
