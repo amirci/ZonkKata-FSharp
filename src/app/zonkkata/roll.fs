@@ -1,9 +1,9 @@
 ﻿namespace ZonkKata
 
 module Roll =
-    let SingleDicePoints = function | 1 -> 100 | 5 -> 50 | _ -> 0
+    let SingleDiePoints = function | 1 -> 100 | 5 -> 50 | _ -> 0
 
-    let SumOnesAndFives = Seq.map SingleDicePoints >> Seq.sum
+    let SumOnesAndFives = Seq.map SingleDiePoints >> Seq.sum
 
     let ThreePairsPoints = 750
 
@@ -20,7 +20,7 @@ module Roll =
     let (|GroupPoints|_|) roll = 
         let groupPoints (x, c) =
             match c with 
-            | _ when c < 3 -> c * (x |> SingleDicePoints)
+            | _ when c < 3 -> c * (x |> SingleDiePoints)
             | _            -> (x, c) |> XOfAKindPoints
 
         let byFreq (x, s) = x, s|> Seq.length
