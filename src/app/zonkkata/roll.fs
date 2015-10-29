@@ -17,11 +17,22 @@ module Roll =
 
     let SixOfAKindPoints n = (n, 6) |> XOfAKindPoints
 
+    let (|ThreePairs|_|) =
+        function
+        | [(_, 2); (_, 2); (_, 2)]   -> Some ThreePairs
+        | [(2,4); (_,2)]             -> Some ThreePairs
+        | [(3,4); (x,2)] when x <> 1 -> Some ThreePairs
+        | _ -> None
+
     let (|GroupPoints|_|) roll = 
-        let groupPoints (x, count) =
-            match count with 
-            | _ when count < 3 -> count * (x |> SingleDiePoints)
-            | _                -> (x, count) |> XOfAKindPoints
+
+        let sumPoints =
+            let points (x, count) =
+                match count with 
+                | _ when count < 3 -> count * (x |> SingleDiePoints)
+                | _                -> (x, count) |> XOfAKindPoints
+            
+            List.map points >> List.sum
 
         let byFreq (x, s) = x, s|> Seq.length
 
@@ -32,10 +43,8 @@ module Roll =
         |> Seq.toList
         |> List.rev
         |> function
-           | [(_,2); (_,2); (_,2)]      -> Some ThreePairsPoints
-           | [(2,4); (_,2)]             -> Some ThreePairsPoints
-           | [(3,4); (x,2)] when x <> 1 -> Some ThreePairsPoints
-           | (g, c) :: t    when c >= 3 -> ((g, c)::t) |> List.map groupPoints |> List.sum |> Some
+           | ThreePairs            -> Some ThreePairsPoints
+           | (g, c)::t when c >= 3 -> (g, c)::t |> sumPoints |> Some
            | _ -> None
 
     let CalculatePoints =
