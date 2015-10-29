@@ -27,12 +27,12 @@ module Roll =
     let (|GroupPoints|_|) roll = 
 
         let sumPoints =
-            let points (x, count) =
+            let calcPoints (x, count) =
                 match count with 
                 | _ when count < 3 -> count * (x |> SingleDiePoints)
                 | _                -> (x, count) |> XOfAKindPoints
             
-            List.map points >> List.sum
+            List.map calcPoints >> List.sum
 
         let byFreq (x, s) = x, s|> Seq.length
 
@@ -43,9 +43,9 @@ module Roll =
         |> Seq.toList
         |> List.rev
         |> function
-           | ThreePairs            -> Some ThreePairsPoints
-           | (g, c)::t when c >= 3 -> (g, c)::t |> sumPoints |> Some
-           | _ -> None
+        | ThreePairs -> ThreePairsPoints
+        | byCount    -> byCount |> sumPoints
+        |> Some
 
     let CalculatePoints =
         List.sort
